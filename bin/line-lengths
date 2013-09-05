@@ -7,10 +7,10 @@
 ARGF.each do |line|
   begin
     case line
-    when /^\s*$/ then next
-    when /^\s*#/ then next
-    when /^\s*end\s*$/ then next
-    when line.length >= 200 then next
+    when /^\s*$/ then next             # Exclude whitespace-only lines
+    when /^\s*#/ then next             # Exclude comment-only lines
+    when /^\s*end\s*$/ then next       # Exclude lines consisting of just `end`
+    when line.length > 200 then next   # Exclude lines that are longer than 200 characters
     else puts line.length
     end
   rescue ArgumentError
