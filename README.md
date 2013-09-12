@@ -4,7 +4,22 @@ A tool to mine GitHub for source code to analyze line length frequencies of code
 
 ## Hypothesis
 
-A line length of 100 characters is "typical" to at least the 99th percentile.
+The 99<sup>th</sup> percentile of "typical" line lengths is greater than 100 characters.
+
+There are a tensions pulling different directions at line lengths:
+
+* Encouraging longer lines
+    * Longer identifiers are more readable
+    * Wrapped lines are prone to more bugs
+    * Wrapped lines are less readable
+    * Screen sizes on desktops
+* Encouraging shorter lines
+    * Longer lines are less readable
+    * Some tools have line length limitations
+    * Screen sizes on laptops
+    * Multi-window views
+
+A balance can be struck, but the question is where? My idea is that "typical" lines of code cluster around a particular length, i.e. follow a [normal distribution](http://en.wikipedia.org/wiki/Normal_distribution). I want to allow "typical" lines of code to not be inconvenienced by being forced to wrap and encourage abnormal lines of code to be rewritten. I've chosen the 99<sup>th</sup> percentile as the cutoff between typical and abnormal, meaning I am assuming that one out of every one hundred lines in a normal code base is problematically long.
 
 ## Methodology
 
@@ -30,3 +45,4 @@ A line length of 100 characters is "typical" to at least the 99th percentile.
 
 1. Line lengths are normally distributed
 1. The most popular projects contain the most "typical" code
+1. Even in projects containing high-quality code, 1 in 100 lines of code will be abnormally long
