@@ -20,10 +20,8 @@ A line length of 100 characters is "typical" to at least the 99th percentile.
 * Process
     1. Select the 10 most popular Ruby projects on GitHub
     1. Check them out to the local machine
-    1. Calculate the set of line-lengths including:
-        * Project Name
-        * Path Components
-    1. Calculate &mu; (mean) and &sigma; (standard deviation) for all projects
+    1. Calculate the set of line-lengths
+    1. Calculate &mu; (mean) and &sigma; (standard deviation)
     1. Calculate 99<sup>th</sup> percentile by the formula:
         * X = &mu; + &sigma; * z
         * Where z = 2.326348 (z-score of 99<sup>th</sup> percentile)
