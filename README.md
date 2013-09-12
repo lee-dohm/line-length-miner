@@ -23,7 +23,7 @@ A line length of 100 characters is "typical" to at least the 99th percentile.
     1. Calculate the set of line-lengths including:
         * Project Name
         * Path Components
-    1. Calculate &mu; and &sigma; for all projects
+    1. Calculate &mu; (mean) and &sigma; (standard deviation) for all projects
     1. Calculate 99<sup>th</sup> percentile by the formula:
         * X = &mu; + &sigma; * z
         * Where z = 2.326348 (z-score of 99<sup>th</sup> percentile)
