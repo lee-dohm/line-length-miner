@@ -47,3 +47,7 @@ A balance can be struck, but the question is where? My idea is that "typical" li
 1. Line lengths are normally distributed
 1. The most popular projects contain the most "typical" code
 1. Even in projects containing high-quality code, 1 in 100 lines of code will be abnormally long
+
+## Notes
+
+There is a project called [Popular Coding Convention on GitHub](http://sideeffect.kr/popularconvention#ruby) that has a number of metrics around what coding conventions are popular in projects on GitHub. The data is interesting and it does not contradict my hypothesis. On the other hand, the data is based on commits. This will skew the data towards code that is checked in often, perhaps even favoring code that isn't yet ready for public consumption. The methodology above will skew the data towards code that is mature and has been looked at by as many people as possible.
