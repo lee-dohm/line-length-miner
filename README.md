@@ -6,7 +6,7 @@ A tool to mine GitHub for source code to analyze line length frequencies of code
 
 The 99<sup>th</sup> percentile of "typical" line lengths is greater than 100 characters.
 
-There are a tensions pulling different directions at line lengths:
+There are tensions pulling different directions at line lengths:
 
 * Encouraging longer lines
     * Longer identifiers are more readable
@@ -19,13 +19,14 @@ There are a tensions pulling different directions at line lengths:
     * Screen sizes on laptops
     * Multi-window views
 
-A balance can be struck, but the question is where? My idea is that "typical" lines of code cluster around a particular length, i.e. follow a [normal distribution](http://en.wikipedia.org/wiki/Normal_distribution). I want to allow "typical" lines of code to not be inconvenienced by being forced to wrap and encourage abnormal lines of code to be rewritten. I've chosen the 99<sup>th</sup> percentile as the cutoff between typical and abnormal, meaning I am assuming that one out of every one hundred lines in a normal code base is problematically long.
+A balance can be struck, but the question is where? My idea is that "typical" lines of code cluster around a particular length, i.e. they follow a [normal distribution](http://en.wikipedia.org/wiki/Normal_distribution). I want to allow "typical" lines of code to not be inconvenienced by being forced to wrap and encourage abnormal lines of code to be rewritten. I've chosen the 99<sup>th</sup> percentile as the cutoff between typical and abnormal, meaning I am assuming that one out of every one hundred lines in a normal code base is problematically long.
 
 ## Methodology
 
 * Selection of Projects
     * Search GitHub for public repositories containing Ruby code and list them by number of stars in descending order
 * Calculation of Line Length
+    * Look at lines of text in files ending with `.rb`
     * All lines except the following are included:
         1. Lines that consist solely of whitespace
         1. Lines that consist solely of comments
