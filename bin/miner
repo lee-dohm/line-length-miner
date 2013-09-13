@@ -4,9 +4,13 @@
 # Copyright (c) 2013 by Lifted Studios. All Rights Reserved.
 #
 
+lib = File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
 require 'fileutils'
-require 'highline/import'
+require 'logger'
 require 'octokit'
+require 'token'
 require 'trollop'
 
 # Represents an error that occurs while executing a git command.
@@ -17,26 +21,7 @@ end
 #
 # @return [Octokit::Client] Client to use to access the API.
 def client
-  token = read_token
-  Octokit::Client.new(access_token: token)
-end
-
-# Creates a restricted access token to use for future connections and stores it
-# in the `.token` file.
-#
-# @return [nil]
-def create_token
-  puts 'Enter your GitHub credentials. They will be used to create an API access token for future '\
-       'connections.'
-  login = ask('Email Address: ')
-  password = ask('Password: ') { |q| q.echo = '*' }
-
-  client = Octokit::Client.new(login: login, password: password)
-  token = client.create_authorization(note: 'line-length-miner',
-                                      note_url: 'https://github.com/lee-dohm/line-length-miner')
-  File.write(token_path, token.token)
-
-  nil
+  Octokit::Client.new(access_token: Token.create.to_s)
 end
 
 # Executes a git command.
@@ -45,6 +30,7 @@ end
 # @return [nil]
 # @raise [GitError] If an error occurs while executing the command.
 def git(args)
+  Log.debug("Execute command: git #{args}")
   raise GitError, "An error occurred executing: git #{args}" unless system("git #{args}")
 
   nil
@@ -55,17 +41,10 @@ end
 # @return [Hash] Hash containing options describing the arguments.
 def parse_arguments
   Trollop::options do
+    opt :debug, 'Enable debugging output'
     opt :num_projects, 'Number of projects to mine', default: 10
-    opt :verbose, 'Give verbose output'
+    opt :verbose, 'Enable verbose output'
   end
-end
-
-# Reads the token from the standard location.
-#
-# @return [String] Forty character token string.
-def read_token
-  create_token unless File.exists?(token_path)
-  File.read(token_path)
 end
 
 # The root of where the example projects will be stored.
@@ -81,13 +60,6 @@ end
 # @return [Array<String, String>] User name and project name of the project.
 def split_project_name(name)
   name.split('/')
-end
-
-# Path where the access token should be stored.
-#
-# @return [String] Path to the token storage location.
-def token_path
-  File.expand_path('../../.token', __FILE__)
 end
 
 # Updates the local copy of the project code by either pulling the latest version of the code or
@@ -107,20 +79,28 @@ def update_project(name)
   nil
 end
 
-options = parse_arguments
+begin
+  options = parse_arguments
+  Log.level = Logger::INFO if options[:verbose]
+  Log.level = Logger::DEBUG if options[:debug]
 
-api = client
-response = api.search_repos('language:ruby',
-                            sort: 'stars',
-                            order: 'desc',
-                            page: 1,
-                            per_page: options[:num_projects])
+  api = client
+  response = api.search_repos('language:ruby',
+                              sort: 'stars',
+                              order: 'desc',
+                              page: 1,
+                              per_page: options[:num_projects])
 
-project_names = response.items.map { |item| item.full_name }
-Dir.mkdir(root) unless Dir.exists?(root)
+  project_names = response.items.map { |item| item.full_name }
+  Dir.mkdir(root) unless Dir.exists?(root)
 
-FileUtils.cd(root) do
-  project_names.each do |name|
-    update_project(name)
+  FileUtils.cd(root) do
+    project_names.each do |name|
+      Log.info { "START Project: #{name}" }
+      update_project(name)
+      Log.info { "  END Project: #{name}" }
+    end
   end
+rescue Exception => e
+  Log.fatal(e)
 end
