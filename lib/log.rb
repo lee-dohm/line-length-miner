@@ -11,6 +11,7 @@ class Log
   # Log a `DEBUG` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.debug(message = nil, &block)
     Log.ensure_logger
@@ -32,6 +33,7 @@ class Log
   # Log a `DEBUG` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.error(message = nil, &block)
     Log.ensure_logger
@@ -42,6 +44,7 @@ class Log
   # Log a `FATAL` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.fatal(message = nil, &block)
     Log.ensure_logger
@@ -52,6 +55,7 @@ class Log
   # Log an `INFO` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.info(message = nil, &block)
     Log.ensure_logger
@@ -87,6 +91,7 @@ class Log
   # Log an `UNKNOWN` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.unknown(message = nil, &block)
     Log.ensure_logger
@@ -97,6 +102,7 @@ class Log
   # Log a `WARN` message.
   #
   # @param [String] message Message to be logged.
+  # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.warn(message = nil, &block)
     Log.ensure_logger
