@@ -7,11 +7,13 @@ GEM
     multipart-post (1.2.0)
     octokit (2.0.0)
       sawyer (~> 0.3.0)
+    rake (10.1.0)
     sawyer (0.3.0)
       faraday (~> 0.8, < 0.10)
       uri_template (~> 0.5.0)
     trollop (2.0)
     uri_template (0.5.3)
+    yard (0.8.6.1)
 
 PLATFORMS
   ruby
@@ -19,4 +21,6 @@ PLATFORMS
 DEPENDENCIES
   highline
   octokit (~> 2.0)
+  rake
   trollop
+  yard

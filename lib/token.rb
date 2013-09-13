@@ -41,7 +41,7 @@ class Token
 
   # Creates a new Token object.
   #
-  # @param [String] 40-character token text.
+  # @param [String] text 40-character token text.
   def initialize(text)
     @text = text
   end

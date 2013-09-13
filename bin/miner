@@ -8,7 +8,7 @@ lib = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'fileutils'
-require 'logger'
+require 'log'
 require 'octokit'
 require 'token'
 require 'trollop'
@@ -30,7 +30,7 @@ end
 # @return [nil]
 # @raise [GitError] If an error occurs while executing the command.
 def git(args)
-  Log.debug("Execute command: git #{args}")
+  Log.d("Execute command: git #{args}")
   raise GitError, "An error occurred executing: git #{args}" unless system("git #{args}")
 
   nil
@@ -96,11 +96,11 @@ begin
 
   FileUtils.cd(root) do
     project_names.each do |name|
-      Log.info { "START Project: #{name}" }
+      Log.i { "START Project: #{name}" }
       update_project(name)
-      Log.info { "  END Project: #{name}" }
+      Log.i { "  END Project: #{name}" }
     end
   end
 rescue Exception => e
-  Log.fatal(e)
+  Log.f(e)
 end
