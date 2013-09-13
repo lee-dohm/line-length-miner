@@ -20,6 +20,8 @@ class Log
   end
 
   # Ensures that a `Logger` object has been created and configured.
+  #
+  # @return [nil]
   def self.ensure_logger
     if @logger.nil?
       @logger = Logger.new($stdout)
@@ -28,6 +30,8 @@ class Log
       @logger.datetime_format = '%Y-%m-%d %H:%M:%S'
       @logger.formatter = proc { |_, timestamp, _, message| "#{timestamp}: #{message}\n" }
     end
+
+    nil
   end
 
   # Log a `DEBUG` message.
