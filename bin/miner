@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
 
 #
 # Copyright (c) 2013 by Lifted Studios. All Rights Reserved.
@@ -7,6 +7,7 @@
 require 'fileutils'
 require 'highline/import'
 require 'octokit'
+require 'trollop'
 
 # Represents an error that occurs while executing a git command.
 class GitError < StandardError
@@ -25,12 +26,14 @@ end
 #
 # @return [nil]
 def create_token
-  puts 'Enter your GitHub credentials. They will be used to create an API access token for future connections.'
+  puts 'Enter your GitHub credentials. They will be used to create an API access token for future '\
+       'connections.'
   login = ask('Email Address: ')
   password = ask('Password: ') { |q| q.echo = '*' }
 
   client = Octokit::Client.new(login: login, password: password)
-  token = client.create_authorization(note: 'line-length-miner', note_url: 'https://github.com/lee-dohm/line-length-miner')
+  token = client.create_authorization(note: 'line-length-miner',
+                                      note_url: 'https://github.com/lee-dohm/line-length-miner')
   File.write(token_path, token.token)
 
   nil
@@ -47,12 +50,37 @@ def git(args)
   nil
 end
 
+# Parses the command line arguments.
+#
+# @return [Hash] Hash containing options describing the arguments.
+def parse_arguments
+  Trollop::options do
+    opt :num_projects, 'Number of projects to mine', default: 10
+    opt :verbose, 'Give verbose output'
+  end
+end
+
 # Reads the token from the standard location.
 #
 # @return [String] Forty character token string.
 def read_token
   create_token unless File.exists?(token_path)
   File.read(token_path)
+end
+
+# The root of where the example projects will be stored.
+#
+# @return [String] Path to the location in which to store the projects.
+def root
+  "#{ENV['HOME']}/dump"
+end
+
+# Splits the full project name into its two components: user name and project name.
+#
+# @param [String] name Full name of the project.
+# @return [Array<String, String>] User name and project name of the project.
+def split_project_name(name)
+  name.split('/')
 end
 
 # Path where the access token should be stored.
@@ -62,14 +90,38 @@ def token_path
   File.expand_path('../../.token', __FILE__)
 end
 
+# Updates the local copy of the project code.
+#
+# @param [String] name Full name of the project.
+# @return [nil]
+def update_project(name)
+  user, project = split_project_name(name)
+
+  if Dir.exists?("#{root}/#{project}")
+    FileUtils.cd("#{root}/#{project}") do
+      git "pull"
+    end
+  else
+    git "clone git@github.com:#{name}.git"
+  end
+
+  nil
+end
+
+options = parse_arguments
+
 api = client
-response = api.search_repos('language:ruby', sort: 'stars', order: 'desc', page: 1, per_page: 10)
+response = api.search_repos('language:ruby',
+                            sort: 'stars',
+                            order: 'desc',
+                            page: 1,
+                            per_page: options[:num_projects])
+
 project_names = response.items.map { |item| item.full_name }
-root = "#{ENV['HOME']}/dump"
 Dir.mkdir(root) unless Dir.exists?(root)
 
 FileUtils.cd(root) do
   project_names.each do |name|
-    git "clone git@github.com:#{name}.git"
+    update_project(name)
   end
 end
