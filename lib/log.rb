@@ -4,17 +4,34 @@
 
 require 'logger'
 
-# Handles logging for the application.
+# A simplified logging interface.
+#
+# Most applications just need to write to the one canonical log sink. This makes that simple.
+# Inspired by the Android logging framework, this class allows one to simply log at various levels
+# without having to configure even a single `Logger` object.
+#
+# @example Logging a simple message
+#     Log.w('Simple message')
+#
+# @example Logging a formatted message
+#     Log.w("Message with some #{data} in it")
+#
+# @example Using a block to not create the message unless it will actually be written
+#     Log.w { "Some complicated message: #{long_running_function}" }
 #
 # @see http://rubydoc.org/stdlib/logger/Logger Ruby standard library Logger class.
 class Log
+  class << self
+    attr_accessor :level
+  end
+
   # Log a `DEBUG` message.
   #
   # @param [String] message Message to be logged.
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.debug(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.debug(message, &block)
   end
@@ -40,7 +57,7 @@ class Log
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.error(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.error(message, &block)
   end
@@ -51,7 +68,7 @@ class Log
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.fatal(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.fatal(message, &block)
   end
@@ -62,34 +79,27 @@ class Log
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.info(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.info(message, &block)
   end
 
-  # Gets the current logging level.
-  #
   # @return
   #     [Logger::DEBUG, Logger::ERROR, Logger::FATAL, Logger::INFO, Logger::UNKNOWN, Logger::WARN]
-  #     Current minimum level of messages that will be logged.
+  #     Logging severity threshold.
   def self.level
-    Log.ensure_logger
+    ensure_logger
 
     @logger.level
   end
 
-  # Sets the current logging level.
-  #
   # @param
   #     [Logger::DEBUG, Logger::ERROR, Logger::FATAL, Logger::INFO, Logger::UNKNOWN, Logger::WARN]
-  #     level Minimum level of messages that will be logged.
-  # @return [nil]
+  #     level Logging severity threshold.
   def self.level=(level)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.level = level
-
-    nil
   end
 
   # Log an `UNKNOWN` message.
@@ -98,7 +108,7 @@ class Log
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.unknown(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.unknown(message, &block)
   end
@@ -109,12 +119,14 @@ class Log
   # @return [Boolean] `true` if successful; `false` otherwise.
   # @yieldreturn [String] Message to be logged.
   def self.warn(message = nil, &block)
-    Log.ensure_logger
+    ensure_logger
 
     @logger.warn(message, &block)
   end
 
   class << self
+    private :ensure_logger
+
     alias_method :d, :debug
     alias_method :e, :error
     alias_method :f, :fatal

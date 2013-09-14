@@ -97,7 +97,9 @@ begin
   FileUtils.cd(root) do
     project_names.each do |name|
       Log.i { "START Project: #{name}" }
+
       update_project(name)
+      
       Log.i { "  END Project: #{name}" }
     end
   end
