@@ -17,6 +17,42 @@ require 'trollop'
 class GitError < StandardError
 end
 
+# Calculate line lengths for the files in the given project.
+#
+# @param [String] name Name of the project to process.
+# @return [nil]
+def calculate_line_lengths(name)
+  Log.d("START counting lines for project #{name}")
+
+  _, project = split_project_name(name)
+  path = File.join(root, project)
+  files = Dir[File.join(path, '**/*.rb')]
+
+  counts = []
+  files.each do |file|
+    Log.d("    START counting lines for #{file}")
+    File.readlines(file).each do |line|
+      begin
+        case line
+        when /^\s*$/ then next             # Exclude whitespace-only lines
+        when /^\s*#/ then next             # Exclude comment-only lines
+        when /^\s*end\s*$/ then next       # Exclude lines consisting of just `end`
+        when line.length > 200 then next   # Exclude lines that are longer than 200 characters
+        else counts << line.length
+        end
+      rescue ArgumentError
+        # Ignore lines with UTF-8 encoding errors
+      end
+    end
+    Log.d("      END counting lines for #{file}")
+  end
+
+  IO.write(output_filename, counts, 0, mode: 'a')
+  Log.d("  END counting lines for project #{name}")
+
+  nil
+end
+
 # Creates a client for accessing the GitHub API.
 #
 # @return [Octokit::Client] Client to use to access the API.
@@ -34,6 +70,13 @@ def git(args)
   raise GitError, "An error occurred executing: git #{args}" unless system("git #{args}")
 
   nil
+end
+
+# File name for recording line counts.
+#
+# @return [String] File name for storing line counts.
+def output_filename
+  "#{ENV['HOME']}/line-counts.txt"
 end
 
 # Parses the command line arguments.
@@ -99,7 +142,8 @@ begin
       Log.i { "START Project: #{name}" }
 
       update_project(name)
-      
+      calculate_line_lengths(name)
+
       Log.i { "  END Project: #{name}" }
     end
   end
