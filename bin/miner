@@ -7,9 +7,11 @@
 lib = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
+require 'csv'
 require 'fileutils'
 require 'log'
 require 'octokit'
+require 'powerpack/string/format'
 require 'token'
 require 'trollop'
 
@@ -38,7 +40,10 @@ def calculate_line_lengths(name)
         when /^\s*#/ then next             # Exclude comment-only lines
         when /^\s*end\s*$/ then next       # Exclude lines consisting of just `end`
         when line.length > 200 then next   # Exclude lines that are longer than 200 characters
-        else counts << line.length
+        else counts << { project: project,
+                         filename: file.sub("#{root}/", ''),
+                         length: line.length,
+                         line: line.gsub("\t", '  ').sub("\n", '') }
         end
       rescue ArgumentError
         # Ignore lines with UTF-8 encoding errors
@@ -47,7 +52,17 @@ def calculate_line_lengths(name)
     Log.d("      END counting lines for #{file}")
   end
 
-  IO.write(output_filename, counts, 0, mode: 'a')
+  CSV.open(output_filename, 'a', col_sep: "\t") do |csv|
+    counts.each do |count|
+      csv << [
+        count[:project],
+        count[:filename],
+        count[:length],
+        count[:line]
+      ]
+    end
+  end
+
   Log.d("  END counting lines for project #{name}")
 
   nil
@@ -58,6 +73,21 @@ end
 # @return [Octokit::Client] Client to use to access the API.
 def client
   Octokit::Client.new(access_token: Token.create.to_s)
+end
+
+def get_projects(count, opts = {})
+  if opts[:query]
+    api = client
+    response = api.search_repos('language:ruby',
+                                sort: 'stars',
+                                order: 'desc',
+                                page: 1,
+                                per_page: count)
+
+    response.items.map { |item| item.full_name }
+  else
+    Dir["#{root}/*"].map { |path| File.basename(path) }
+  end
 end
 
 # Executes a git command.
@@ -86,6 +116,8 @@ def parse_arguments
   Trollop::options do
     opt :debug, 'Enable debugging output'
     opt :num_projects, 'Number of projects to mine', default: 10
+    opt :query, 'Query GitHub for most popular projects', default: true
+    opt :sync, 'Get the latest version of the code', default: true
     opt :verbose, 'Enable verbose output'
   end
 end
@@ -102,7 +134,13 @@ end
 # @param [String] name Full name of the project.
 # @return [Array<String, String>] User name and project name of the project.
 def split_project_name(name)
-  name.split('/')
+  parts = name.split('/')
+
+  case parts.length
+  when 2 then parts
+  when 1 then [nil, parts.first]
+  else raise ArgumentError, "Malformed project name: #{name}"
+  end
 end
 
 # Updates the local copy of the project code by either pulling the latest version of the code or
@@ -111,7 +149,7 @@ end
 # @param [String] name Full name of the project.
 # @return [nil]
 def update_project(name)
-  user, project = split_project_name(name)
+  _, project = split_project_name(name)
 
   if Dir.exists?("#{root}/#{project}")
     FileUtils.cd("#{root}/#{project}") { git "pull" }
@@ -127,26 +165,23 @@ begin
   Log.level = Logger::INFO if options[:verbose]
   Log.level = Logger::DEBUG if options[:debug]
 
-  api = client
-  response = api.search_repos('language:ruby',
-                              sort: 'stars',
-                              order: 'desc',
-                              page: 1,
-                              per_page: options[:num_projects])
-
-  project_names = response.items.map { |item| item.full_name }
+  project_names = get_projects(options[:num_projects], options)
   Dir.mkdir(root) unless Dir.exists?(root)
 
   FileUtils.cd(root) do
+    CSV.open(output_filename, 'w', col_sep: "\t") { |csv| csv << %w{Project Filename Length Text} }
+
     project_names.each do |name|
       Log.i { "START Project: #{name}" }
 
-      update_project(name)
+      update_project(name) if options[:sync]
       calculate_line_lengths(name)
 
       Log.i { "  END Project: #{name}" }
     end
   end
 rescue Exception => e
-  Log.f(e)
+  Log.wtf(e)
+  Log.f("#{e.class}: #{e}")
+  e.backtrace.each { |b| Log.f("    #{b}") }
 end

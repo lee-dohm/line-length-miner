@@ -62,6 +62,19 @@ class Log
     @logger.error(message, &block)
   end
 
+  # Logs an exception.
+  #
+  # Logs the exception as a series of `FATAL` messages.
+  #
+  # @param [Exception] e Exception to be logged.
+  # @return [nil]
+  def self.exception(e)
+    Log.f("#{e.class}: #{e}")
+    e.backtrace.each { |b| Log.f("    #{b}") }
+
+    nil
+  end
+
   # Log a `FATAL` message.
   #
   # @param [String] message Message to be logged.
@@ -133,5 +146,6 @@ class Log
     alias_method :i, :info
     alias_method :u, :unknown
     alias_method :w, :warn
+    alias_method :wtf, :exception
   end
 end
